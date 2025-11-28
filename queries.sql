@@ -1,0 +1,42 @@
+-- Query 1
+CREATE TABLE DEVICE_EXPECTATIONS (
+    DeviceID VARCHAR(20) NOT NULL,
+    LocationName VARCHAR(50) NOT NULL,
+    MinSafeTemp DECIMAL(5,2) NOT NULL,
+    MaxSafeTemp DECIMAL(5,2) NOT NULL,
+    MinSafeHumidity DECIMAL(5,2) NOT NULL,
+    MaxSafeHumidity DECIMAL(5,2) NOT NULL,
+    Active TINYINT DEFAULT 1,
+    PRIMARY KEY (DeviceID)
+);
+-- Query 2
+CREATE TABLE DEVICE_READINGS (
+    ReadingID VARCHAR(20) NOT NULL,
+    DeviceID VARCHAR(20) NOT NULL,
+    Temperature DECIMAL(5,2) NOT NULL,
+    Humidity DECIMAL(5,2) NOT NULL,
+    RecordedAt DATETIME DEFAULT GETDATE(),
+    PRIMARY KEY (ReadingID),
+    FOREIGN KEY (DeviceID) REFERENCES DEVICE_EXPECTATIONS(DeviceID)
+);
+-- Query 3
+INSERT INTO DEVICE_EXPECTATIONS(DeviceID, LocationName, MinSafeTemp, MaxSafeTemp, MinSafeHumidity, MaxSafeHumidity)
+VALUES ('Device_1', 'Location 1', 15.00, 30.00, 0, 50);
+-- Query 4
+CREATE VIEW CLINICAL_MONITOR_VIEW
+AS 
+SELECT DR.ReadingID, DE.LocationName, DR.Temperature, DR.Humidity, DR.RecordedAt, 'SAFE' AS Status
+FROM DEVICE_READINGS AS DR
+JOIN DEVICE_EXPECTATIONS AS DE
+ON DR.DeviceID = DE.DeviceID
+WHERE (DR.Temperature BETWEEN DE.MinSafeTemp AND DE.MaxSafeTemp)
+AND (DR.Humidity BETWEEN DE.MinSafeHumidity AND DE.MaxSafeHumidity)
+
+UNION ALL
+
+SELECT DR.ReadingID, DE.LocationName, DR.Temperature, DR.Humidity, DR.RecordedAt, 'UNSAFE' AS Status
+FROM DEVICE_READINGS AS DR
+JOIN DEVICE_EXPECTATIONS AS DE
+ON DR.DeviceID = DE.DeviceID
+WHERE (DR.Temperature NOT BETWEEN DE.MinSafeTemp AND DE.MaxSafeTemp)
+AND (DR.Humidity NOT BETWEEN DE.MinSafeHumidity AND DE.MaxSafeHumidity)
