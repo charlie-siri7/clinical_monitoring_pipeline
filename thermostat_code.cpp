@@ -5,7 +5,8 @@
 
 const char* ssid = "";
 const char* password = "";
-const char serverURL = "";
+const char* serverURL = "";
+
 #define DHTPIN 14 // I/O Pin connected to DHT11 sensor
 #define DHTTYPE DHT11
 
@@ -21,13 +22,13 @@ const int renameButtonPin = 13;
 // variables different states
 bool deviceOn = false;
 bool renaming = true;
-int togglenState = 0;
+int toggleState = 0;
 int renameState = 0;
 // json object to store read in data
 StaticJsonDocument<200> doc;
 
 // Function prototypes
-void rename();
+int rename();
 void sendData(String payload);
 
 void setup() {
@@ -125,6 +126,7 @@ int rename() {
   while (Serial.available() == 0) {}
   // Get string from user, set renaming variable, return
   device_id = Serial.readString();
+  device_id.trim();
   renaming = false;
   return 0;
 }

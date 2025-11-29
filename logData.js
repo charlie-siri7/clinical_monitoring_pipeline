@@ -1,48 +1,38 @@
-import { app } from '@azure/functions';
+module.exports = async (request, context) => {
+    context.log("Processing Request");
 
-// Define SQL output to match table
-const sqlOutput = {
-    type: 'sql',
-    commandText: 'dbo.DEVICE_READINGS', // Match table name
-    connectionStringSetting: 'SqlConnectionString',
-    name: 'sqlOutput'
-};
+    try {
+        /*
+        Parse the JSON from Arduino
+        Example: { "device_id": "Device_1", "temperature": 25.5, "humidity": 60.0 }
+        */
+        const data = request.body;
 
-app.http('logTemperature', {
-    methods: ['POST'],
-    authLevel: 'function',
-    extraOutputs: [sqlOutput],
-    handler: async (request, context) => {
-        context.log(`Processing request for url "${request.url}"`);
+        // Generate ID
+        const generatedId = Date.now().toString() + '-' + Math.floor(Math.random() * 1000).toString();
 
-        try {
-            /*
-             Parse the JSON from Arduino
-             Example: { "device_id": "Device_1", "temperature": 25.5, "humidity": 60.0 }
-             */
-            const incomingData = await request.json();
+        // Map JSON data from Arduino to SQL columns
+        const sqlRow = {
+            ReadingID: generatedId,
+            DeviceID: data.device_id,
+            Temperature: data.temperature,
+            Humidity: data.humidity
+            // RecordedAt is skipped because the default option is a GETDATE() call
+        };
 
-            // Generate ID
-            const generatedId = Date.now().toString() + '-' + Math.floor(Math.random() * 10000).toString();
+        context.bindings.sqlOutput = sqlRow;
 
-            // Map JSON data from Arduino to SQL columns
-            const sqlRow = {
-                ReadingID: generatedId,
-                DeviceID: incomingData.device_id,
-                Temperature: incomingData.temperature,
-                Humidity: incomingData.humidity
-                // RecordedAt is skipped because the default option is a GETDATE() call
-            };
+        context.res = {
+            status: 200,
+            body: "Data Saved to SQL!"
+        };
 
-            // Send to SQL
-            context.extraOutputs.set(sqlOutput, sqlRow);
-
-            return { body: "Data successfully saved to DEVICE_READINGS." };
-
-        } catch (error) {
-            context.log.error(error);
-            // A common case: if DeviceID doesn't exist in DEVICE_EXPECTATIONS
-            return { status: 500, body: "Error: " + error.message };
-        }
+    } catch (error) {
+        context.log.error(error);
+        // A common case: if DeviceID doesn't exist in DEVICE_EXPECTATIONS
+        context.res = {
+            status: 500,
+            body: "Error: " + error.message
+        };
     }
-});
+}
