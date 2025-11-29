@@ -1,4 +1,4 @@
-module.exports = async (request, context) => {
+module.exports = async (context, request) => {
     context.log("Processing Request");
 
     try {
@@ -9,7 +9,7 @@ module.exports = async (request, context) => {
         const data = request.body;
 
         // Generate ID
-        const generatedId = Date.now().toString() + '-' + Math.floor(Math.random() * 1000).toString();
+        const generatedId = Date.now().toString() + '-' + Math.floor(Math.random() * 1000);
 
         // Map JSON data from Arduino to SQL columns
         const sqlRow = {
