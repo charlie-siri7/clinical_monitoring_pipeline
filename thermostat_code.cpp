@@ -3,6 +3,9 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 
+const char* ssid = "";
+const char* password = "";
+const char serverURL = "";
 #define DHTPIN 14 // I/O Pin connected to DHT11 sensor
 #define DHTTYPE DHT11
 
@@ -22,7 +25,10 @@ int togglenState = 0;
 int renameState = 0;
 // json object to store read in data
 StaticJsonDocument<200> doc;
-JsonObject object = doc.to<JsonObject>();
+
+// Function prototypes
+void rename();
+void sendData(String payload);
 
 void setup() {
   // Initialize LEDs
@@ -35,6 +41,22 @@ void setup() {
   // Set blue LED to high since you have to rename at the start
   digitalWrite(ledPinBlue, HIGH);
   Serial.begin(9600);
+
+  Serial.print("Connecting to WiFi");
+  WiFi.begin(ssid, password);
+
+  int timeElapsed = 0;
+  while (WiFi.status() != WL_CONNECTED && timeElapsed < 20) {
+    delay(500);
+    Serial.print(".");
+    timeElapsed++;
+  }
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("WiFi successfully connected");
+  } else {
+    Serial.println("WiFi failed to connect");
+  }
+
   delay(5000);
   rename();
   dht.begin();
@@ -86,6 +108,12 @@ void loop() {
     serializeJson(doc, jsonString);
     jsonString.replace("\\n", "");
     Serial.println(jsonString);
+
+    if (WiFi.status() == WL_CONNECTED) {
+      sendData(jsonString);
+    } else {
+      Serial.println("WiFi not connected, can't send data");
+    }
   }
   // Increment counter
   counter++;
@@ -99,4 +127,19 @@ int rename() {
   device_id = Serial.readString();
   renaming = false;
   return 0;
+}
+
+void sendData(String payload) {
+  HTTPClient client;
+  client.begin(serverURL);
+  client.addHeader("Content-Type", "application/json");
+  int responseCode = client.POST(payload);
+  if (responseCode > 0) {
+    String response = client.getString();
+    Serial.print("Server response code: ");
+  } else {
+    Serial.print("Error sending POST: ");
+  }
+  Serial.println(responseCode);
+  client.end();
 }
