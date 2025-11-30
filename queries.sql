@@ -49,3 +49,39 @@ SELECT TOP 20 * FROM DEVICE_READINGS ORDER BY RecordedAt DESC;
 
 -- Query 6
 SELECT TOP 20 * FROM CLINICAL_MONITOR_VIEW ORDER BY RecordedAt DESC;
+
+-- Query 7
+DELETE FROM DEVICE_READINGS
+WHERE Temperature < 0.00 OR Temperature > 50.00
+OR Humidity < 20.00 OR Humidity > 90.00;
+
+-- Query 8
+CREATE TABLE HOURLY_DEVICE_SUMMARY (
+    SummaryID INT IDENTITY(1,1) PRIMARY KEY,
+    DeviceID VARCHAR(20) NOT NULL,
+    LogHour DATETIME NOT NULL,
+    AvgTemperature DECIMAL(5,2),
+    AvgHumidity DECIMAL(5,2),
+    ReadingCount INT,
+    FOREIGN KEY (DeviceID) REFERENCES DEVICE_EXPECTATIONS(DeviceID)
+)
+
+-- Query 9
+INSERT INTO HOURLY_DEVICE_SUMMARY(DeviceID, LogHour, AvgTemperature, AvgHumidity, ReadingCount)
+SELECT 
+    DeviceID,
+    DATEADD(hour, DATEDIFF(hour, 0, RecordedAt), 0) AS LogHour, 
+    AVG(Temperature) AS AvgTemperature,
+    AVG(Humidity) AS AvgHumidity,
+    COUNT(*) AS ReadingCount
+FROM DEVICE_READINGS
+WHERE 
+    (Temperature BETWEEN 0 AND 50) AND (Humidity BETWEEN 20 AND 90)
+GROUP BY 
+    DeviceID, 
+    DATEADD(hour, DATEDIFF(hour, 0, RecordedAt), 0)
+ORDER BY 
+    LogHour DESC;
+
+-- Query 10
+SELECT TOP 20 * FROM HOURLY_DEVICE_SUMMARY ORDER BY LogHour DESC;
