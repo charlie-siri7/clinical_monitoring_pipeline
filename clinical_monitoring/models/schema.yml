@@ -1,0 +1,17 @@
+version: 2
+
+models:
+  - name: clinical_monitor
+    columns: 
+      - name: DeviceID
+        tests:
+          - not_null
+          # "- unique" not needed since we're testing readings, meaning IDs may reappear
+
+      - name: Temperature
+        tests:
+          - not_null
+          # warning if temp is abnormally low - could be from sensor error
+          # - dbt_utils.expression_is_true:
+          #     arguments:
+          #         expression: ">= -100"

@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: iot_source
+    database: clinical_monitoring_db  # Your actual database name
+    schema: dbo                       # The schema where your raw tables live
+    tables:
+      - name: device_readings
+      - name: device_expectations
