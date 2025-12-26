@@ -1,3 +1,8 @@
+/* Button functions: 
+   next to blue LED: select new device name
+   Between blue and red LEDs: turn thermostat on and off (whether or not you are reading data) 
+*/
+
 #include "DHT.h"
 #include <ArduinoJson.h>
 #include <WiFi.h>
