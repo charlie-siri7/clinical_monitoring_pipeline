@@ -4,14 +4,15 @@
     )
 }}
 
+-- Tables for readings and expectations
 WITH raw_readings AS (
     SELECT * FROM {{ source('iot_source', 'device_readings') }}
 ),
-
 expectations AS (
     SELECT * FROM {{ source('iot_source', 'device_expectations') }}
 )
 
+-- Select data from tables, with IsUnsafe boolean
 SELECT R.ReadingID,
     R.DeviceID,
     R.Temperature,
